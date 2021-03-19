@@ -1,0 +1,132 @@
+{% extends 'layout/login_basic.html' %}
+{% load static %}
+{% block title %} 用户登录 {% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/account.css' %}">
+    <style>
+        .err_msg{
+            color: red;
+            position: absolute;
+            font-size: 10px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+<div class="account">
+    <h3 class="title" style="text-align: center;">用户登录</h3>
+    <form id="regForm" method="POST" >
+        {% csrf_token %}
+        {% for field in forms %}
+            {% if field.name == 'code' %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div class="clearfix">
+                        <div class="col-md-6" style="padding-left: 0">
+                             {{ field }}
+                             <span class="err_msg" ></span>
+                            </div>
+                        <div class="col-md-6"><input id="btnemail" type="button" class="btn btn-default" value="点击获取验证码"></div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <!--<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">-->
+                {{ field }}
+                <span class="err_msg" ></span>
+                
+                </div>
+                
+            {% endif %}
+        {% endfor %}
+        <a href="{% url 'login_name' %}" style="height: 200px;width: 100px;margin-top: 50px;">用户名密码登录？</a>
+        <button id="btnsubmit" type="button" class="btn btn-primary" style="margin-left:150px;margin-bottom: 3px;" >登 录</button>
+        <span id="code_value" hidden ></span>
+    </form>
+    
+</div>
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function () {
+            bindClickButton();//获取验证码
+            bindregisterButton();//注册
+        });
+        // 点击获取验证码的按钮绑定事件
+        function bindClickButton(){
+            $('#btnemail').click(function(){
+                //获取用户输入的email号
+                var text = document.getElementById("id_email").value;
+
+                //发送ajax请求,把邮箱发送出去
+                $.ajax({
+                    url:"{% url 'send_email' %}",
+                    type:'GET',
+                    data:{"email": text, "tpl": "login"},
+                    dataType:"JSON",
+                    success:function(res){
+                        //ajax请求发送成功之后,执行的函数,res是返回的结果
+                        if (res.status){
+                            $('#code_value').text(res.code);
+                            sendemailRemind();
+                            // alert($('#code_value').text());
+                            
+                        }else{
+                            $.each(res.error,function(key,value){
+                                $("#id_"+key).next().text(value[0]);
+                            })
+                        }
+                    },
+                });
+            })
+        };
+        function sendemailRemind(){
+            var $btnemail = $('#btnemail');
+            $btnemail.prop('disabled',true);//禁用
+            var time = 60;
+            var remind = setInterval(function() {
+                $btnemail.val(time+"秒重新发送");
+                time = time - 1
+                if (time < 1){
+                    clearInterval(remind)
+                    $btnemail.val("点击获取验证码").prop('disabled',false);
+                }
+            }, 1000);
+        };
+        function bindregisterButton(){
+                $('#btnsubmit').click(function(){
+                    $('.err_msg').empty();
+                    var code_value = $('#code_value').text();
+                    var text = $('#id_code').val();
+                    //alert(text);
+                    //alert(code_value);
+                    if(text != code_value){
+                        $('#id_code').next().text("验证码输入错误,请重新输入");
+                        return;
+                    }
+                    // alert("执行中");
+                    // alert($('#regForm').serialize());
+                    $.ajax({
+                        url:"{% url 'login' %}",
+                        type: "POST",
+                        data: $('#regForm').serialize(),
+                        dataType:"JSON",
+                        success:function(res){
+                            
+                            if(res.status){
+                                
+                                location.href = res.data;
+                            }else{
+                                $.each(res.error,function(key,value){
+                                    $("#id_"+key).next().text(value[0]);
+                                })
+                            }  
+                        }
+                    });
+                });
+        };
+    </script>
+{% endblock %}

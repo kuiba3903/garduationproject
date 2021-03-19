@@ -1,0 +1,320 @@
+{% extends 'layout/login_basic.html' %}
+{% block title %}价格行情 {% endblock %}
+{% block css %}
+<style>
+    .form-control-nowidth {
+        display: block;
+        // width: 100%;
+        // height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+    .btn-primary-radius {
+        color: #fff;
+        background-color: #337ab7;
+        border-color: #2e6da4;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+    
+    .btn-primary-radius.focus,
+    .btn-primary-radius:focus {
+        color: #fff;
+        background-color: #286090;
+        border-color: #122b40
+    }
+    
+    .btn-primary-radius:hover {
+        color: #fff;
+        background-color: #286090;
+        border-color: #204d74
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="panel panel-primary" style="width:1350px;height:550px;margin:auto 5px auto 165px;" >
+        <div class="panel-body"  >
+            <label for="价格对比分析" style="font-size:20px;">价格对比分析</label>
+            <form  id="form" style="margin:auto 10px;">
+                {% csrf_token %}
+                {% for field in forms %}
+                <div class="form-group" style="float:left;">
+                    <label for="{{ field.id_for_label }}" style="font-size:20px;float:left;margin:auto 20px"> {{ field.label }}:</label>
+                    <!--<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">-->
+                    {{ field }}
+
+                </div>
+                {% endfor %}
+                <input type="button" id="search" value="查询" class="btn-primary-radius" style="margin:auto 80px;font-size:20px">
+            </form>
+            <div id="main" style="width: 600px;height:450px;margin:20px auto;"></div>
+        </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+
+    $(function(){
+        $('#shop').addClass('current').siblings('li').removeClass('current');
+        document.getElementById("link").click();
+        $.ajax({
+                url:"/search/",
+                method:"POST",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    //alert(data);
+                    //console.log(data);
+                    show(data);
+
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        $("#id_vegetable_name").change(function(){
+            // alert(11);
+            //alert($("#form").serialize());
+            $.ajax({
+                url:"/getVegetable/",
+                method:"GET",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    //alert(data);
+                    //console.log(data);
+                    var content='';
+                    $.each(data, function(key, value){
+                        content+='<option value='+key+'>'+value+'</option>'
+                    });
+                    $('#id_craft_name').html(content);
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+        $("#id_province_name").change(function(){
+            // alert(11);
+            //alert($("#form").serialize());
+            $.ajax({
+                url:"/getMarket/",
+                method:"POST",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    // alert(data);
+                    // console.log(data);
+                    var content='';
+                    $.each(data, function(key, value){
+                        content+='<option value='+key+'>'+value+'</option>'
+                    });
+                    $('#id_market_name').html(content);
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+        $("#search").click(function(){
+            // alert(11);
+            //alert($("#form").serialize());
+            $.ajax({
+                url:"/search/",
+                method:"POST",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    //alert(data);
+                    //console.log(data);
+                    show(data);
+
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+    });
+    var myChart ;
+    function show(data){
+        // alert(data.price_2019.replace('[',',').replace(']',',').split(','));
+        // console.log(data.price_2019.slice(1,data.price_2019.length-1).split(','));
+        if(data.price_2019 ){
+            //alert(!data.price_2019);
+            price_2019 = data.price_2019.slice(1,data.price_2019.length-1).split(',').map(Number);
+            $.each(price_2019,function(i,item){
+                if(item == 0){
+                    price_2019[i]='-';
+                }
+            })
+        }else{
+            price_2019=[];
+        }
+        if(data.price_2020 ){
+            price_2020 = data.price_2020.slice(1,data.price_2020.length-1).split(',').map(Number);
+            $.each(price_2020,function(i,item){
+                if(item == 0){
+                    price_2020[i]='-';
+                }
+            })
+        }else{
+            price_2020=[];
+        }
+        // price_2020 = data.price_2020.slice(1,data.price_2020.length-1).split(',')
+        
+        if (myChart != null && myChart != "" && myChart != undefined) {
+        myChart.dispose();//销毁
+    }
+        // 基于准备好的dom，初始化echarts实例
+            myChart = echarts.init(document.getElementById('main'));
+
+            // 指定图表的配置项和数据
+            var option = {
+                title: {
+                    text: ''
+                },
+                tooltip: {
+                     grid: {
+                     top:'60px',
+                     left: '50px',
+                     right: '50px',
+                     bottom: '25px',
+                     containLabel: true
+                     },
+                     formatter: '{a}{b}月份<br />{c}元/公斤'
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none'
+                        },
+                        dataView: {readOnly: false},
+                        magicType: {type: ['line', 'bar']},
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                legend: {
+                    top: '10px',
+                    left: 'center',
+                    icon: 'rect',
+                    itemWidth: 30,
+                    itemHeight: 10,
+                    textStyle: {
+                        fontSize: 12,
+                        color:'#737373'
+                    },
+                    data:['2019年','2020年']
+                },
+                xAxis: {
+                    name:"月份",
+                    data: [1,2,3,4,5,6,7,8,9,10,11,12],
+                    boundaryGap: true,
+                    axisLabel:{
+                        interval:0,
+                        textStyle:{
+                            color:'#a3a3a3',
+                            align:'center'
+                        },
+                    },
+                    axisTick: {
+                        show: false
+                    }
+                },
+                yAxis: [{
+                    name:"价格单位:元/公斤",
+                    type: 'value',
+
+                }],
+                series: [{
+                    name: '2019年',
+                    type: 'line',
+                    data: price_2019,
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    markPoint: {
+                        data: [
+                            {type: 'max', name: '最大值'},
+                            {type: 'min', name: '最小值'}
+                        ]
+                    },
+                    markLine: {
+                        data: [
+                            {type: 'average', name: '平均值'}
+                        ]
+                    },
+                    itemStyle: {
+                            normal: {
+                                //color: '#6cb041',
+                                lineStyle:{
+                                    width:5//设置线条粗细
+                                }
+                            }
+                        },
+                    symbolSize:15,
+                    showAllSymbol:true,
+                    smooth: true
+                },
+                {
+                    name: '2020年',
+                    type: 'line',
+                    data: price_2020,
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    itemStyle: {
+                            normal: {
+                                //color: '#6cb041',
+                                lineStyle:{
+                                    width:5//设置线条粗细
+                                }
+                            }
+                        },
+                    markPoint: {
+                        data: [
+                            {type: 'max', name: '最大值'},
+                            {type: 'min', name: '最小值'}
+                        ]
+                    },
+                    markLine: {
+                        data: [
+                            {type: 'average', name: '平均值'}
+                        ]
+                    },
+                    symbolSize:15,
+                    showAllSymbol:true,
+                    smooth: true
+                }]
+            };
+
+            // 使用刚指定的配置项和数据显示图表。
+            myChart.setOption(option);
+    }
+</script>
+{% endblock %}

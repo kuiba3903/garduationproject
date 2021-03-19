@@ -1,0 +1,234 @@
+{% extends 'layout/login_basic.html' %}
+{% block title %}单日行情{% endblock %}
+{% block css %}
+<style>
+    .form-control-nowidth {
+        display: block;
+        // width: 100%;
+        // height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+    .btn-primary-radius {
+        color: #fff;
+        background-color: #337ab7;
+        border-color: #2e6da4;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+
+    .btn-primary-radius.focus,
+    .btn-primary-radius:focus {
+        color: #fff;
+        background-color: #286090;
+        border-color: #122b40
+    }
+
+    .btn-primary-radius:hover {
+        color: #fff;
+        background-color: #286090;
+        border-color: #204d74
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="panel panel-primary" style="width:1350px;height:550px;margin:auto 5px auto 165px;" >
+        <div class="panel-body"  >
+            <label for="单日行情" style="font-size:20px;">单日行情</label>
+            <form  id="form" style="margin:auto 10px;">
+                {% csrf_token %}
+                {% for field in forms %}
+                <div class="form-group" style="float:left;">
+                    <label for="{{ field.id_for_label }}" style="font-size:20px;float:left;margin:auto 20px"> {{ field.label }}:</label>
+                    <!--<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">-->
+                    {{ field }}
+
+                </div>
+                {% endfor %}
+                <input type="button" id="search" value="查询" class="btn-primary-radius" style="margin:auto 80px;font-size:20px">
+            </form>
+            <div id="main" style="overflow-x: auto; overflow-y: auto;width: 800px;height:450px;margin:20px auto;">
+                <table class="table table-striped">
+                    <tr>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">序号</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">日期</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">产品</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">价格</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">市场</th>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+
+</div>
+{% endblock %}
+{% block js %}
+<script>
+    $(function(){
+        $('#publicproducts').addClass('current').siblings('li').removeClass('current');
+        document.getElementById("link").click();
+        var value = $("#id_market_name option:selected").text();
+        var vv = $("#id_market_name option:selected").attr("value");
+        var data;
+        $.ajax({
+                url:"/query_datePrice/",
+                method:"GET",
+                data: {"market_index":vv},
+                dataType:"JSON",
+                success:function(d){
+                    //alert(data["data"][0]);
+                    data = d["data"];
+                    var table = $(".table");
+                    for(i=0;i<d["length"];++i){
+                        var tr = document.createElement("tr");
+                        var td1 = document.createElement("td");
+                        td1.innerHTML = i+1;
+                        td1.style.fontSize = "16px";
+                        td1.style.textAlign = "center";
+                        var td2 = document.createElement("td");
+                        td2.innerHTML = data[i][2];
+                        td2.style.fontSize = "16px";
+                        td2.style.textAlign = "center";
+                        var td3 = document.createElement("td");
+                        td3.innerHTML = data[i][3];
+                        td3.style.fontSize = "16px";
+                        td3.style.textAlign = "center";
+                        var td4 = document.createElement("td");
+                        td4.innerHTML = data[i][4];
+                        td4.style.fontSize = "16px";
+                        td4.style.textAlign = "center";
+                        var td5 = document.createElement("td");
+                        td5.innerHTML = value;
+                        td5.style.fontSize = "16px";
+                        td5.style.textAlign = "center";
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        tr.appendChild(td3);
+                        tr.appendChild(td4);
+                        tr.appendChild(td5);
+                        table.append(tr);
+                    }
+
+                    console.log(data);
+
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        $("#id_vegetable_name").change(function(){
+            // alert(11);
+            //alert($("#form").serialize());
+            $.ajax({
+                url:"/getVegetable/",
+                method:"GET",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    //alert(data);
+                    //console.log(data);
+                    var content='';
+                    $.each(data, function(key, value){
+                        content+='<option value='+key+'>'+value+'</option>'
+                    });
+                    $('#id_craft_name').html(content);
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+        $("#id_province_name").change(function(){
+            // alert(11);
+            //alert($("#form").serialize());
+            $.ajax({
+                url:"/getMarket/",
+                method:"POST",
+                data: $("#form").serialize() ,
+                dataType:"JSON",
+                success:function(data){
+                    // alert(data);
+                    // console.log(data);
+                    var content='';
+                    $.each(data, function(key, value){
+                        content+='<option value='+key+'>'+value+'</option>'
+                    });
+                    $('#id_market_name').html(content);
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+        $("#search").click(function(){
+            var value = $("#id_market_name option:selected").text();
+            var vv = $("#id_market_name option:selected").attr("value");
+            $(".table  tr:gt(0)").remove();
+            $.ajax({
+                url:"/query_datePrice/",
+                method:"GET",
+                data: {"market_index":vv},
+                dataType:"JSON",
+                success:function(d){
+                    //alert(data["data"][0]);
+                    data = d["data"];
+                    var table = $(".table");
+                    for(i=0;i<d["length"];++i){
+                        var tr = document.createElement("tr");
+                        var td1 = document.createElement("td");
+                        td1.innerHTML = i+1;
+                        td1.style.fontSize = "16px";
+                        td1.style.textAlign = "center";
+                        var td2 = document.createElement("td");
+                        td2.innerHTML = data[i][2];
+                        td2.style.fontSize = "16px";
+                        td2.style.textAlign = "center";
+                        var td3 = document.createElement("td");
+                        td3.innerHTML = data[i][3];
+                        td3.style.fontSize = "16px";
+                        td3.style.textAlign = "center";
+                        var td4 = document.createElement("td");
+                        td4.innerHTML = data[i][4];
+                        td4.style.fontSize = "16px";
+                        td4.style.textAlign = "center";
+                        var td5 = document.createElement("td");
+                        td5.innerHTML = value;
+                        td5.style.fontSize = "16px";
+                        td5.style.textAlign = "center";
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        tr.appendChild(td3);
+                        tr.appendChild(td4);
+                        tr.appendChild(td5);
+                        table.append(tr);
+                    }
+
+                    console.log(data);
+
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+
+})
+
+</script>
+{% endblock %}

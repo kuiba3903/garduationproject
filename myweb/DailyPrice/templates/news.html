@@ -1,0 +1,137 @@
+{% extends 'layout/login_basic.html' %}
+{% block title %}单日行情{% endblock %}
+{% block css %}
+<style>
+    .form-control-nowidth {
+        display: block;
+        width: 100%;
+        height: 120px;
+        margin:auto 50px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #555;
+        background-color: #fff;
+        background-image: none;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+    .btn-primary-radius {
+        color: #fff;
+        background-color: #337ab7;
+        border-color: #2e6da4;
+        border-radius: 4px;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+    }
+
+    .btn-primary-radius.focus,
+    .btn-primary-radius:focus {
+        color: #fff;
+        background-color: #286090;
+        border-color: #122b40
+    }
+
+    .btn-primary-radius:hover {
+        color: #fff;
+        background-color: #286090;
+        border-color: #204d74
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="panel panel-primary" style="width:1350px;height:850px;margin:auto 5px auto 165px;" >
+        <div class="panel-body"  >
+            <label for="分类与预测" style="font-size:20px;">分类与预测</label>
+            <form  id="form" style="margin:auto 10px;">
+                {% csrf_token %}
+
+                <div class="form-group" style="float:left;">
+                    <label for="id_market_name" style="font-size:20px;float:left;margin:auto 120px"> 请输入新闻文本:</label>
+
+                    <textarea id="news" rows="3" cols="30" class="form-control-nowidth" style="margin:auto 120px;"></textarea>
+                    <input type="button" id="search" value="提交" class="btn-primary-radius" style="margin:115px 200px;font-size:20px;position:absolute;left:1100px;top:350px;">
+                    <label for="id_market_name" style="font-size:20px;float:left;margin:30px 120px"> 分析结果展示:</label>
+                    <table class="table table-striped" style="margin:auto 120px;">
+                    <tr>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">时间</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">关键词</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">分类类型</th>
+                        <th style="font-size:20px;padding:auto 100px;text-align:center;">趋势</th>
+
+                    </tr>
+
+                </table>
+
+                </div>
+
+            </form>
+            <div id="main" style="width: 800px;height:450px;margin:20px auto;">
+
+            </div>
+        </div>
+
+</div>
+{% endblock %}
+{% block js %}
+<script>
+    $(function(){
+        $('#myorder').addClass('current').siblings('li').removeClass('current');
+        document.getElementById("link3").click();
+        $("#search").click(function(){
+            var value = $("#news").val();
+            //alert(value);
+            console.log(value);
+            $.ajax({
+                url:"/fenlei/",
+                method:"GET",
+                data: {"text":value},
+                dataType:"JSON",
+                success:function(d){
+                    var table = $(".table");
+                    $(".table  tr:gt(0)").remove();
+                    var tr = document.createElement("tr");
+                    var td1 = document.createElement("td");
+                    td1.innerHTML = d["time"];
+                    td1.style.fontSize = "16px";
+                    td1.style.textAlign = "center";
+                    var td2 = document.createElement("td");
+                    td2.innerHTML = d["key"];
+                    td2.style.fontSize = "16px";
+                    td2.style.textAlign = "center";
+                    var td3 = document.createElement("td");
+                    td3.innerHTML = d["result"];
+                    td3.style.fontSize = "16px";
+                    td3.style.textAlign = "center";
+                    var td4 = document.createElement("td");
+                    td4.innerHTML = d["qushi"];
+                    td4.style.fontSize = "16px";
+                    td4.style.textAlign = "center";
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    tr.appendChild(td3);
+                    tr.appendChild(td4);
+                    table.append(tr);
+
+
+
+
+                },
+                error:function(){
+                    alert("错误");
+                }
+            });
+        });
+
+})
+
+</script>
+{% endblock %}
